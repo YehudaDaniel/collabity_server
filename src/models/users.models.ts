@@ -1,9 +1,18 @@
-import { Schema, model } from 'mongoose'
+import { Schema, model, Model, Document } from 'mongoose'
 import validator from 'validator'
 import * as jwt from 'jsonwebtoken'
 import { NotationAllowed } from '../utils/interfaces/NotationAllowed.interfaces'
 
-const userSchema: NotationAllowed = new Schema({
+
+export interface IUser extends Document {
+    username: string,
+    email: string,
+    password: string,
+    tokens: Array<boolean>,
+    profilePic: Buffer,
+}
+
+const userSchema: NotationAllowed = new Schema<IUser>({
     username: {
         type: String,
         required: true,
@@ -37,9 +46,11 @@ const userSchema: NotationAllowed = new Schema({
         type: Buffer
     }
 },{
-    timestamps: true
+    timestamps: true,
+    collection: 'User'
 })
 
+//Functions on the user model--------------------------
 
 //Generates a token for a new user wherever is used
 userSchema.methods.generateAuthToken = async function() {
@@ -52,4 +63,6 @@ userSchema.methods.generateAuthToken = async function() {
     return token
 }
 
-export const User = model('User', userSchema as Schema)
+//------------------------------------------------------
+
+export const User: Model<IUser> = model<IUser>('User', userSchema as Schema)
