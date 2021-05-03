@@ -3,6 +3,8 @@ import { auth } from '../middleware/auth.middleware'
 import { User } from '../models/users.models'
 import { NotationAllowed } from '../utils/interfaces/NotationAllowed.interfaces'
 import { ResponseStatus } from '../utils/status.utils'
+import bcrypt from 'bcrypt'
+import { userCont } from '../controllers/users.controller'
 
 //Modules
 export const userRouter: Router = Router()
@@ -14,14 +16,21 @@ userRouter
         res.send(req.user)
     })
     //Post Requests
-    .post('/register', async (req: Request, res: Response) => {
-        const user: NotationAllowed = new User(req.body)
+    .post('/register', userCont.register_C)
 
+    .post('/login', async (req: Request, res: Response) => {
         try{
-            await user.save()
-            const token = await user.generateAuthToken()
-            res.status(ResponseStatus.Created).send({ user, token})
+            const user = await User.findOne({ email: req.body.email })
+            if(!user)
+                return res.status(ResponseStatus.NotFound).send()
+
+            const isMatch = await bcrypt.compare(req.body.password, user.password)
+            if(!isMatch)
+                return res.status(ResponseStatus.NotFound).send()
+            
+            return user
         }catch(e) {
             res.status(ResponseStatus.BadRequest).send(e)
         }
+
     })
