@@ -11,12 +11,12 @@ export const auth = async (req:any, res:any, next:NextFunction):Promise<void> =>
         
         if (typeof verifiedJWT === 'object') {
             let decoded: ValidJWT = verifiedJWT as ValidJWT;        
-            const user = await User.findOne({ _id: decoded._id, 'tokens.token': token })
+            const user = await User.findOne({ _id: decoded._id, 'tokens.token': token }, {username: true, email: true})
 
             if(!user)
                 throw new Error()
             req.token = token
-            req.user = user
+            req.user = {user, token}
             next()
         } else {
             throw new Error('no authentication');
