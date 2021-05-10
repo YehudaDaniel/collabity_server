@@ -1,27 +1,37 @@
-import { NextFunction } from 'express'
+import { Request, Response, NextFunction } from 'express'
 import * as jwt from 'jsonwebtoken'
 import { User } from '../models/users.models'
 import { ValidJWT } from '../utils/interfaces/ValidJWT.interfaces'
 import { ResponseStatus } from '../utils/status.utils'
 
-export const auth = async (req:any, res:any, next:NextFunction):Promise<void> => {
+export const auth = async (req: Request, res: Response, next:NextFunction): Promise<void> => {
     try{
-        const token: string = req.header('Authorization').replace('Bearer ', '')
-        const verifiedJWT = jwt.verify(token, process.env.JWT_SECRET as string)
+        const token = req.header('Authorization')?.replace('Bearer ', '')
+        if(!token)
+            throw new Error('Something went wrong')
+        const verifiedJWT = jwt.verify(token as string, process.env.JWT_SECRET as string)
         
         if (typeof verifiedJWT === 'object') {
             let decoded: ValidJWT = verifiedJWT as ValidJWT;        
-            const user = await User.findOne({ _id: decoded._id, 'tokens.token': token }, {username: true, email: true})
+            const user = await User.findOne({ _id: decoded._id, 'tokens.token': token })
 
             if(!user)
                 throw new Error()
-            req.token = token
-            req.user = {user, token}
+            // const tokenData = token
+            // const userOBJ = {
+            //     id: user._id,
+            //     username: user.username,
+            //     email: user.email,
+            //     token: tokenData
+            // }
+            
+            req.body.token = token
+            req.body.user = user
             next()
         } else {
             throw new Error('no authentication');
         }
     }catch(e) {
-        res.status(ResponseStatus.Unauthorized).send({error: 'Please authenticate'})
+        res.status(ResponseStatus.Unauthorized).json({error: 'Please authenticate'})
     }
 }
