@@ -1,16 +1,6 @@
-import { Schema, model, Model, Document, HookNextFunction } from 'mongoose'
+import { Schema, model, Model } from 'mongoose'
 import validator from 'validator'
-import * as jwt from 'jsonwebtoken'
-import bcrypt from 'bcrypt'
-
-
-export interface IUser extends Document {
-    username: string,
-    email: string,
-    password: string,
-    tokens: Array<boolean>,
-    profilePic: Buffer,
-}
+import { IUser } from '../utils/interfaces/IUser.interface'
 
 const userSchema: Schema<IUser> = new Schema<IUser>({
     username: {
@@ -42,12 +32,12 @@ const userSchema: Schema<IUser> = new Schema<IUser>({
             required: true
         }
     }],
-    profilePic: {
-        type: Buffer
+    profilepic: {
+        type: Buffer,
     }
 },{
     timestamps: true,
-    collection: 'User'
+    collection: 'user'
 })
 
 
