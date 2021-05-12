@@ -17,13 +17,6 @@ export const auth = async (req: Request, res: Response, next:NextFunction): Prom
 
             if(!user)
                 throw new Error()
-            // const tokenData = token
-            // const userOBJ = {
-            //     id: user._id,
-            //     username: user.username,
-            //     email: user.email,
-            //     token: tokenData
-            // }
             
             req.body.token = token
             req.body.user = user

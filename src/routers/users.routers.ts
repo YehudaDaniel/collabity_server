@@ -2,8 +2,8 @@ import { Request, Response, NextFunction, Router } from 'express'
 import { auth } from '../middleware/auth.middleware'
 import { userCont } from '../controllers/users.controller'
 import { ResponseStatus } from '../utils/status.utils'
-import sharp from 'sharp'
 import multer from 'multer'
+import { User } from '../models/users.models'
 
 const upload = multer({
     limits: {
@@ -25,6 +25,8 @@ export const userRouter: Router = Router()
 userRouter
     //GET Requests
     .get('/me', auth, userCont.read_C)
+    
+    .get('/avatar/:id', userCont.getImage_C)
     //Post Requests
     .post('/register', userCont.register_C)
 
@@ -34,16 +36,7 @@ userRouter
 
     .post('/logoutall', auth, userCont.logoutAll_C)
 
-    .post('/uploadimg', auth, upload.single('image'), async (req: Request, res: Response) => {
-        try{
-            const buffer = await sharp(req.file.buffer).resize({width: 250, height: 250}).png().toBuffer()
-            req.body.user.profilepic = buffer
-            await req.body.user.save()
-            res.send()
-        }catch(e) {
-            res.status(ResponseStatus.BadRequest).send(e)
-        }
-    }, (err: Error, req: Request, res: Response, next: NextFunction) => {
+    .post('/uploadimg', auth, upload.single('image'), userCont.uploadImage_C, (err: Error, req: Request, res: Response, next: NextFunction) => {
         res.status(ResponseStatus.BadRequest).send({error: err.message})
     })
 

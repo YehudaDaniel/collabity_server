@@ -32,7 +32,7 @@ const userSchema: Schema<IUser> = new Schema<IUser>({
             required: true
         }
     }],
-    profilepic: {
+    profilePic: {
         type: Buffer,
     }
 },{
