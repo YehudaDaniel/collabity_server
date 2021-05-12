@@ -3,25 +3,12 @@ import { ResponseStatus } from '../utils/status.utils'
 import { User } from '../models/users.models'
 import bcrypt from 'bcrypt'
 import sharp from 'sharp'
-import multer, { Multer } from 'multer'
 import * as jwt from 'jsonwebtoken'
 
 console.log('Imported user controller')
 
 export module userCont {
     let saltRounds: number = 10
-    export const upload = multer({
-        limits: {
-            fileSize: 1000000
-        },
-        fileFilter(req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) {
-            if(!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
-                return cb(new Error('Please provide a valid photo'))
-            }
-
-            cb(null, true)
-        }
-    })
 
     //Function for signing up a new user with password encryption
     //TODO: Add checkings for security
@@ -161,12 +148,36 @@ export module userCont {
     //Function for uploading a new profile image for the user
     export async function uploadImage_C(req: Request, res: Response) {
         try{
+            const token = req.header('Authorization')?.replace('Bearer ', '')
             const buffer = await sharp(req.file.buffer).resize({width: 250, height: 250}).png().toBuffer()
-            req.body.user.profilepic = buffer
-            await req.body.user.save()
-            res.send()
+            const user = await User.findOne({ 'tokens.token': token})
+            if(!user)
+                return res.status(ResponseStatus.NotFound)
+            
+            user.profilePic = buffer
+            
+            await user.save()
+            console.log(user.profilePic)
+            console.log(buffer)
+            
+            res.send(userData(user, token))
         }catch(e) {
             res.status(ResponseStatus.BadRequest).send(e)
+        }
+    }
+
+    //Function for getting user image by id
+    export async function getImage_C(req: Request, res: Response) {
+        try{
+            const user = await User.findById(req.params.id)
+    
+            if(!user || !user.profilePic)
+                throw new Error('An error has occured')
+            
+            res.set('Content-Type','image/png')
+            res.send(user.profilePic)
+        } catch(e) {
+            res.status(404).send()
         }
     }
 

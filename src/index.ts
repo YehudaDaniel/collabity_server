@@ -2,6 +2,7 @@ import express from 'express';
 import { userRouter } from './routers/users.routers'
 import { DatabaseDriver } from './db/mongoose.db'
 import { RoutesConfig } from './config/routes.config';
+import fileUpload from 'express-fileupload';
 
 const app = express()
 const PORT = process.env.PORT
