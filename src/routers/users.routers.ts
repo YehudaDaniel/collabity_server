@@ -3,7 +3,6 @@ import { auth } from '../middleware/auth.middleware'
 import { userCont } from '../controllers/users.controller'
 import { ResponseStatus } from '../utils/status.utils'
 import multer from 'multer'
-import { User } from '../models/users.models'
 
 const upload = multer({
     limits: {

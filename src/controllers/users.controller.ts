@@ -193,10 +193,12 @@ export module userCont {
     //Function that returns the desired data for a response of a user
     function userData(data: any, token: any) {
         return {
-            id: data._id,
-            username: data.username,
-            email: data.email,
-            token
+            user: {
+                id: data._id,
+                username: data.username,
+                email: data.email,
+                token
+            }
         }
     }
 }
