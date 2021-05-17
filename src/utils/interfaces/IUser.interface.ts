@@ -5,5 +5,5 @@ export interface IUser extends Document {
     email: string,
     password: string,
     tokens: Array<object>,
-    profilePic: Buffer,
+    profilePic?: Buffer,
 }

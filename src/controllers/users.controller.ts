@@ -29,7 +29,7 @@ export module userCont {
             try{
                 const user = User.create(userCred, async (err, doc) => {
                     if(err)
-                        return res.status(ResponseStatus.InternalError).send(err)
+                        return res.status(ResponseStatus.BadRequest).send(err)
                     
                     try{
                         const token = await generateAuthToken(doc._id.toString())
@@ -54,7 +54,7 @@ export module userCont {
 
             const isMatch = await bcrypt.compare(req.body.password, user.password)
             if(!isMatch)
-                return res.status(ResponseStatus.NotFound).json({message: 'Something went wrong'})
+                return res.status(ResponseStatus.BadRequest).json({message: 'Something went wrong'})
 
             const token = await generateAuthToken(user._id)
 
@@ -69,35 +69,43 @@ export module userCont {
         res.send(userData(req.body.user, req.body.token))
     }
 
-    //Function for logging out of a specific user
-    export async function logout_C(req: Request, res: Response) {
+    //Function for getting user image by id
+    export async function getImage_C(req: Request, res: Response) {
         try{
-            req.body.user.tokens = req.body.user.tokens.filter((token: { token: any }) => {
-                return token.token !== req.body.token
-            })
-
-            await req.body.user.save()
-            res.send('Logged out successfully')
-        }catch(e) {
-            res.status(ResponseStatus.InternalError).send(e)
+            const user = await User.findById(req.params.id)
+    
+            if(!user || !user.profilePic)
+                throw new Error('An error has occured')
+            
+            res.set('Content-Type','image/png')
+            res.send(user.profilePic)
+        } catch(e) {
+            res.status(404).send()
         }
     }
 
-    //Function for logging out of all connected users
-    export async function logoutAll_C(req: Request, res: Response) {
+    //Function for uploading a new profile image for the user
+    export async function uploadImage_C(req: Request, res: Response) {
         try{
-            req.body.user.tokens = []
-            await req.body.user.save()
-
-            res.send('Logged out of all users')
+            const token = req.header('Authorization')?.replace('Bearer ', '')
+            const buffer = await sharp(req.file.buffer).resize({width: 250, height: 250}).png().toBuffer()
+            const user = await User.findOne({ 'tokens.token': token})
+            if(!user)
+                return res.status(ResponseStatus.NotFound)
+            
+            user.profilePic = buffer
+            
+            await user.save()
+            res.send()
         }catch(e) {
-            res.status(ResponseStatus.InternalError).send(e)
+            res.status(ResponseStatus.BadRequest).send(e)
         }
     }
 
     //Function for updating a logged user's data
     //json body request should be under "update":{}
     //TODO: add checking for all updates, especially password
+    //TODO: this function on test throws an unhandled promise when trying to change password(but not when trying to change something else), fix that
     export async function updateUser_C(req: Request, res: Response) {
         const bodyData: string[] = Object.keys(req.body.update)
         const allowedChanges: string[] = ['username', 'email', 'password']
@@ -110,7 +118,7 @@ export module userCont {
             bodyData.forEach(data => req.body.user[data] = req.body.update[data])
 
             if(bodyData.includes('password')){
-                bcrypt.hash(req.body.update.password, saltRounds, (err, encrypted) => {
+                await bcrypt.hash(req.body.update.password, saltRounds, (err, encrypted) => {
                     if(err)
                         return res.status(ResponseStatus.InternalError).json({error: 'Something went wrong'})
                     req.body.user.password = encrypted
@@ -145,39 +153,31 @@ export module userCont {
         }
     }
 
-    //Function for uploading a new profile image for the user
-    export async function uploadImage_C(req: Request, res: Response) {
+    //TODO: Add a function to delete profile picture and on deletion a default profile picture should appear instead, make sure to include a default pic in the user schema
+
+    //Function for logging out of a specific user
+    export async function logout_C(req: Request, res: Response) {
         try{
-            const token = req.header('Authorization')?.replace('Bearer ', '')
-            const buffer = await sharp(req.file.buffer).resize({width: 250, height: 250}).png().toBuffer()
-            const user = await User.findOne({ 'tokens.token': token})
-            if(!user)
-                return res.status(ResponseStatus.NotFound)
-            
-            user.profilePic = buffer
-            
-            await user.save()
-            console.log(user.profilePic)
-            console.log(buffer)
-            
-            res.send(userData(user, token))
+            req.body.user.tokens = req.body.user.tokens.filter((token: { token: any }) => {
+                return token.token !== req.body.token
+            })
+
+            await req.body.user.save()
+            res.send('Logged out successfully')
         }catch(e) {
-            res.status(ResponseStatus.BadRequest).send(e)
+            res.status(ResponseStatus.InternalError).send(e)
         }
     }
 
-    //Function for getting user image by id
-    export async function getImage_C(req: Request, res: Response) {
+    //Function for logging out of all connected users
+    export async function logoutAll_C(req: Request, res: Response) {
         try{
-            const user = await User.findById(req.params.id)
-    
-            if(!user || !user.profilePic)
-                throw new Error('An error has occured')
-            
-            res.set('Content-Type','image/png')
-            res.send(user.profilePic)
-        } catch(e) {
-            res.status(404).send()
+            req.body.user.tokens = []
+            await req.body.user.save()
+
+            res.send('Logged out of all users')
+        }catch(e) {
+            res.status(ResponseStatus.InternalError).send(e)
         }
     }
 

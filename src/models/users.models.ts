@@ -1,4 +1,5 @@
 import { Schema, model, Model } from 'mongoose'
+import sharp from 'sharp'
 import validator from 'validator'
 import { IUser } from '../utils/interfaces/IUser.interface'
 
@@ -6,7 +7,8 @@ const userSchema: Schema<IUser> = new Schema<IUser>({
     username: {
         type: String,
         required: true,
-        trim: true
+        trim: true,
+        minLength: 6
     },
     email: {
         type: String,
@@ -32,6 +34,7 @@ const userSchema: Schema<IUser> = new Schema<IUser>({
             required: true
         }
     }],
+    //TODO: add default anonymous picture
     profilePic: {
         type: Buffer,
     }

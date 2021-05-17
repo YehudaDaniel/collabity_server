@@ -9,6 +9,7 @@
     "test": "env-cmd -f ./ENV/test.env jest --watch --runInBand"
   },
   "jest": {
+    "testEnvironment": "node",
     "moduleFileExtensions": [
       "ts",
       "tsx",
