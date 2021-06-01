@@ -38,7 +38,6 @@ export module userCont {
                         res.status(ResponseStatus.InternalError).send(e)
                     }
                 })
-                // return res.status(ResponseStatus.Ok).json({message: "Created new user successfully"})
             }catch(e) {
                 res.status(ResponseStatus.InternalError).send(`Error: ${e}`)
             }

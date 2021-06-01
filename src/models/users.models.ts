@@ -43,5 +43,11 @@ const userSchema: Schema<IUser> = new Schema<IUser>({
     collection: 'user'
 })
 
+userSchema.virtual('projects', {
+    ref: 'Project',
+    localField: '_id',
+    foreignField: 'owner'
+})
+
 
 export const User: Model<IUser> = model<IUser>('User', userSchema as Schema)

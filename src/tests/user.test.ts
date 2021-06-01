@@ -1,22 +1,7 @@
 import { app } from '../index'
 import request from 'supertest'
 import { User } from '../models/users.models'
-import { Server } from 'node:http'
 // import { setupDataBase, userOne, userOneId } from './fixtures/db'
-
-//runs before each test case in this test suite
-// beforeEach(setupDataBase)
-// let server: Server, agent: request.SuperAgentTest
-// beforeEach(done => {
-//     server = app.listen(4000, () => {
-//         agent = request.agent(server)
-//         done()
-//     })
-// })
-
-// afterEach(done => {
-//     return server && server.close(done)
-// })
 
 //POST Requests --------------------
 
