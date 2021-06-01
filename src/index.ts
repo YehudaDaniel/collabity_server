@@ -15,6 +15,6 @@ app.use(express.urlencoded({ extended: true}))
 app.use(userRouter)
 RoutesConfig(app)
 
-app.listen(PORT, () => {
+export const server = app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`)
 })

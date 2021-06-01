@@ -1,4 +1,4 @@
-import { app } from '../index'
+import { app, server } from '../index'
 import request from 'supertest'
 import { User } from '../models/users.models'
 // import { setupDataBase, userOne, userOneId } from './fixtures/db'
@@ -197,3 +197,7 @@ test('Should not delete unauthorized user', async () => {
         })
         .expect(401)
 })
+
+afterAll(function(done) {
+    server.close(done);
+});
