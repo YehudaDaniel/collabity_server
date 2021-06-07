@@ -1,9 +1,6 @@
 import { app } from '../index'
 import request from 'supertest'
 import { User } from '../models/users.models'
-// import { setupDataBase, userOne, userOneId } from './fixtures/db'
-
-//POST Requests --------------------
 
 //Seding a test request to /user/register which signs a new user and returns its data
 test('Should sign up a new user', async () => {

@@ -1,9 +1,10 @@
 import jwt from "jsonwebtoken";
-import mongoose, { Document} from "mongoose";
+import mongoose from "mongoose";
 import { User } from "../../models/users.models";
 
 export const userOneId = new mongoose.Types.ObjectId
 export const userOne = {
+    _id: userOneId,
     username: 'test',
     email: 'test@test.com',
     password: 'test123',
