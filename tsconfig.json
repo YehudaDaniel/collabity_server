@@ -1,4 +1,9 @@
 {
+  "typeAcquisition": {
+    "include": [
+      "jest"
+    ]
+  },
   "compilerOptions": {
     /* Basic Options */
     // "incremental": true,                   /* Enable incremental compilation */

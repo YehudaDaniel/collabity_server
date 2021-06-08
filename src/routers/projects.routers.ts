@@ -9,3 +9,6 @@ export const projectRouter: Router = Router()
 projectRouter
     //POST Requests
     .post('/create', auth, projectCont.create_C)
+
+    //GET Requests
+    .get('/read', auth, projectCont.read_C)
