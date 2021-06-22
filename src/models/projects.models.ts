@@ -12,16 +12,20 @@ const projectSchema: Schema<IProjects> = new Schema<IProjects>({
         type: String,
         required: true
     },
-    features: {
-        type: [String]
-    },
-    participants: {
-        type: [String],
+    features: [{
+        content: String,
+        likes: {
+            type: Number,
+            default: 0
+        }
+    }],
+    participants: [{
+        username: String,
         permissions: {
             type: String,
-            default: 'participant'
+            default: 'Participant'
         }
-    },
+    }],
     owner: {
         type: Schema.Types.ObjectId,
         required: true,

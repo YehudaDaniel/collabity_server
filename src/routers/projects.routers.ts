@@ -11,4 +11,11 @@ projectRouter
     .post('/create', auth, projectCont.create_C)
 
     //GET Requests
-    .get('/read', auth, projectCont.read_C)
+    .get('/readmany', auth, projectCont.readMany_C)
+
+    .get('/read/:username/:title', auth, projectCont.read_C)
+
+    //PATCH Requests
+    .patch('/update/:projectname', auth, projectCont.update_C)
+
+    .patch('/update/participants/:projectname', auth, projectCont.updatePars_C)
