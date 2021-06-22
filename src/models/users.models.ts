@@ -7,6 +7,7 @@ const userSchema: Schema<IUser> = new Schema<IUser>({
     username: {
         type: String,
         required: true,
+        unique: true,
         trim: true,
         minLength: 4
     },
@@ -34,9 +35,9 @@ const userSchema: Schema<IUser> = new Schema<IUser>({
             required: true
         }
     }],
-    //TODO: add default anonymous picture
     profilePic: {
-        type: Buffer,
+        type: String,
+        default: 'default.png'
     }
 },{
     timestamps: true,

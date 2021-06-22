@@ -1,8 +1,16 @@
 import { Request, Response, NextFunction, Router } from 'express'
 import { auth } from '../middleware/auth.middleware'
 import { userCont } from '../controllers/users.controller'
-import { ResponseStatus } from '../utils/status.utils'
 import multer from 'multer'
+
+const fileStorageEngine = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, './src/images')
+    },
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + '--' +file.originalname)
+    }
+})
 
 const upload = multer({
     limits: {
@@ -12,9 +20,9 @@ const upload = multer({
         if(!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
             return cb(new Error('Please provide a valid photo'))
         }
-
         cb(null, true)
-    }
+    },
+    storage: fileStorageEngine
 })
 
 //Modules
@@ -35,12 +43,12 @@ userRouter
 
     .post('/logoutall', auth, userCont.logoutAll_C)
 
-    .post('/uploadimg', auth, upload.single('image'), userCont.uploadImage_C, (err: Error, req: Request, res: Response, next: NextFunction) => {
-        res.status(ResponseStatus.BadRequest).send({error: err.message})
-    })
+    .post('/uploadimg', auth, upload.single('image'), userCont.uploadImage_C)
 
     //Patch Requests - update
     .patch('/update', auth, userCont.updateUser_C)
 
     //Delete Requests
     .delete('/delete', auth, userCont.deleteUser_C)
+
+    .delete('/deleteimg', auth, userCont.deleteImg_C)

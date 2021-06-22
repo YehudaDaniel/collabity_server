@@ -2,8 +2,9 @@ import {Request, Response} from 'express'
 import { ResponseStatus } from '../utils/status.utils'
 import { User } from '../models/users.models'
 import bcrypt from 'bcrypt'
-import sharp from 'sharp'
 import * as jwt from 'jsonwebtoken'
+import fs from 'fs'
+import sharp from 'sharp'
 
 console.log('Imported user controller')
 
@@ -12,6 +13,7 @@ export module userCont {
 
     //Function for signing up a new user with password encryption
     //TODO: Add checkings for security
+    //TODO: delete and regenerate token once a week or so.
     export async function register_C(req: Request, res: Response) {
 
         bcrypt.hash(req.body.password, saltRounds, (err, encrypted) => {
@@ -72,14 +74,19 @@ export module userCont {
     export async function getImage_C(req: Request, res: Response) {
         try{
             const user = await User.findById(req.params.id)
-    
-            if(!user || !user.profilePic)
-                throw new Error('An error has occured')
+            
+            if(!user)
+                return res.status(ResponseStatus.BadRequest)
+            
+            const profilePic = await sharp(`${__dirname}/../images/${user.profilePic}`).resize({ width: 250, height: 250 }).png().toBuffer()
+
+            if(!profilePic)
+                return res.status(ResponseStatus.BadRequest).send()
             
             res.set('Content-Type','image/png')
-            res.send(user.profilePic)
+            res.send(profilePic)
         } catch(e) {
-            res.status(404).send()
+            res.status(ResponseStatus.InternalError).send(e)
         }
     }
 
@@ -87,12 +94,11 @@ export module userCont {
     export async function uploadImage_C(req: Request, res: Response) {
         try{
             const token = req.header('Authorization')?.replace('Bearer ', '')
-            const buffer = await sharp(req.file.buffer).resize({width: 250, height: 250}).png().toBuffer()
             const user = await User.findOne({ 'tokens.token': token})
             if(!user)
-                return res.status(ResponseStatus.NotFound)
+                return res.status(ResponseStatus.NotFound).send()
             
-            user.profilePic = buffer
+            user.profilePic = req.file.filename
             
             await user.save()
             res.send()
@@ -152,7 +158,18 @@ export module userCont {
         }
     }
 
-    //TODO: Add a function to delete profile picture and on deletion a default profile picture should appear instead, make sure to include a default pic in the user schema
+    //Function for deleting user's profile picture and the default picture would replace it
+    export async function deleteImg_C(req: Request, res: Response) {
+        try{
+            fs.unlinkSync(`${__dirname}/../images/${req.body.user.profilePic}`)
+
+            req.body.user.profilePic = 'default.png'
+            await req.body.user.save()
+            res.send()
+        }catch(e) {
+            res.status(ResponseStatus.InternalError).send()
+        }
+    }
 
     //Function for logging out of a specific user
     export async function logout_C(req: Request, res: Response) {
@@ -193,7 +210,7 @@ export module userCont {
     function userData(data: any, token: any) {
         return {
             user: {
-                id: data._id,
+                _id: data._id,
                 username: data.username,
                 email: data.email,
                 token
