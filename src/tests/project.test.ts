@@ -1,7 +1,7 @@
 import request from 'supertest'
 import { app, server } from '../index'
 import { Project } from '../models/projects.models'
-import { setupDataBase, userOne, userOneId, userTwo, userTwoId } from './fixtures/db'
+import { projectOneId, setupDataBase, ThirdProjectOneId, userOne, userOneId, userTwo, userTwoId } from './fixtures/db'
 
 //This function runs before each test case in this test suite
 beforeEach(setupDataBase)
@@ -97,6 +97,7 @@ test('Should read an individual project', async () => {
         .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
         .send()
         .expect(200)
+
     //Assert the title of the fetched project is correct
     const project = response.body
     expect(project.title).toBe('Second project')
@@ -113,7 +114,7 @@ test('Should not read an individual project, unauthorized', async () => {
 //Sending a test request to /project/update/:projectname to update either title or content
 test('Should update project data', async () => {
     const response = await request(app)
-        .patch('/project/update/First_project')
+        .patch(`/project/update/${projectOneId}`)
         .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
         .send({
             update: {
@@ -124,13 +125,41 @@ test('Should update project data', async () => {
         .expect(200)
     //Assert the title of the project has changed
     const project = response.body
-    expect(project.title).toBe("changed")
+    expect(project.title).toBe('changed')
 })
 
-//Sending a test request to /project/update/:projectname to update only content
+//Sending a test request to /project/read as a project manager, making sure he can make changes to the project with the right permissions
+test('Should update the project as a project manager', async () => {
+    const response = await request(app)
+        .patch(`/project/update/${ThirdProjectOneId}`)
+        .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+        .send({
+            update: {
+                 title: 'Changed title'
+            }
+        })
+    //Assert the title of the project has changed
+    const project = response.body
+    expect(project.title).toEqual('Changed title')
+})
+
+//Sending a test request to /project/read as a regular participant, making sure he can not make any changes to the project
+test('Should not update the project as a regualar participant', async () => {
+    await request(app)
+        .patch(`/project/update/${ThirdProjectOneId}`)
+        .set('Authorization', `Bearer ${userTwo.tokens[0].token}`)
+        .send({
+            update: {
+                title: 'Wasnt changed'
+            }
+        })
+        .expect(400)
+})
+
+//Sending a test request to /project/update/:projectid to update only content
 test('Should update only one project data', async () => {
     const response = await request(app)
-        .patch('/project/update/First_project')
+        .patch(`/project/update/${projectOneId}`)
         .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
         .send({
             update: {
@@ -146,7 +175,7 @@ test('Should update only one project data', async () => {
 //Sending a test request to /project/update/:projectname with false projectname expecting it to fail
 test('Should not find a nonexisting project', async () => {
     await request(app)
-        .patch('/project/update/notexistbla')
+        .patch(`/project/update/60d314110363503e04282976`)
         .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
         .send({
             update: {
@@ -160,7 +189,7 @@ test('Should not find a nonexisting project', async () => {
 //Sending a test request to /project/update/:projectname with unallowed key values expecting it to fail
 test('Should not update unallowed keys', async () => {
     await request(app)
-        .patch('/project/update/First_project')
+        .patch(`/project/update/${projectOneId}`)
         .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
         .send({
             update: {
@@ -173,7 +202,21 @@ test('Should not update unallowed keys', async () => {
 
 
 //Sending a test request to /project/update/features/:projectname to upload new features or update them
-test.todo('Should update the features array list of a project')
+// test('Should update the features array list of a project', async () => {
+//     const response = await request(app)
+//         .patch('/project/update/features/First_project')
+//         .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+//         .send({
+//             update: {
+//                 features: [{
+//                     content: "A new feature"
+//                 }]
+//             }
+//         })
+    
+//     //Assert the content of the new feature is right
+//     expect(response.features[0].content).toBe("A new feature")
+// })
 
 //Sending a test request to __________ to update a project of another user using permissions
 
@@ -185,7 +228,8 @@ test('Should update participants array list', async () => {
         .send({
             update: {
                 participants: [{
-                    username: "Yehuda"
+                    _id: userOneId,
+                    username: "test"
                 }]
             }
         })
