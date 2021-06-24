@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { isValidObjectId, Mongoose, ObjectId, Schema } from 'mongoose'
+import { isValidObjectId, Mongoose, ObjectId, Schema, Types } from 'mongoose'
 import { Project } from '../models/projects.models'
 import { User } from '../models/users.models'
 import { IProjects } from '../utils/interfaces/IProjects.interface'
@@ -84,23 +84,36 @@ export module projectCont {
 
         try{
             //TODO: change type any to explicit type
-            const title: string = req.params.projectname.replace('_', ' ')
-            const projectData: any = {}
-            
-            bodyData.forEach((data: string) =>  projectData[data] = req.body.update[data] )
-            
-            const project = await Project.updateOne({title, owner: req.body.user._id}, { $set: projectData })
-            
-            //"n" containing the amount of matched documents found, hence 0
-            if(!project.n)
-                return res.status(ResponseStatus.NotFound).json({ error: "Could not find the specified project" })
+            const projectid: string = req.params.projectid
+            const projectData: {[key: string]: any} = {}
 
-            const updatedProject = await Project.findOne({ title: bodyData.includes('title')? projectData["title"]: title , owner: req.body.user._id })
+            //Inserting the updated data into projectData
+            bodyData.forEach((data: string) => projectData[data] = req.body.update[data] )
 
-            if(!updatedProject)
-                return res.status(ResponseStatus.NotFound).json({ error: 'Could not find the updated project'})
+            //Finding the project by its ID
+            const project = await Project.findOne({ _id: projectid })
 
-            res.send(updatedProject)
+            if(!project)
+                return res.status(ResponseStatus.NotFound).json({ error: 'Could not find the project'})
+
+
+            const isParticipantHasClearance = project?.participants?.some((participant) => {
+                return participant._id.toString() == req.body.user._id.toString() && participant.permissions == "Manager"
+            })
+
+            //Is the user who is making the changes either an owner or has a manager role as a participant?
+            if(project?.owner.toString() == req.body.user._id.toString() || isParticipantHasClearance){
+                const updateProject = await Project.updateOne({ _id: projectid }, { $set: projectData })
+                
+                //"n" containing the amount of matched documents found, hence 0
+                if(!updateProject.n)
+                    return res.status(ResponseStatus.NotFound).json({ error: "Could not find the specified project" })
+                
+                const updatedProject = await Project.findOne({ _id: projectid })
+                res.send(updatedProject)
+            }else{
+                res.status(ResponseStatus.BadRequest).send()
+            }
         }catch(e) {
             res.status(ResponseStatus.InternalError).send()
         }
@@ -132,6 +145,21 @@ export module projectCont {
             res.send(updatedProject)
         }catch(e) {
             res.status(ResponseStatus.InternalError).send()
+        }
+    }
+
+    export async function updateFeatures_C(req: Request, res: Response) {
+        const bodyData: string[] = Object.keys(req.body.update)
+        const allowedChanges: string[] = ['features']
+        const isOperationValid: boolean = bodyData.every(data => allowedChanges.includes(data))
+
+        if(!isOperationValid)
+            return res.status(ResponseStatus.BadRequest).json({ error: 'Invalid updates' })
+
+        try{
+
+        }catch(e) {
+
         }
     }
 }

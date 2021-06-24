@@ -16,6 +16,8 @@ projectRouter
     .get('/read/:username/:title', auth, projectCont.read_C)
 
     //PATCH Requests
-    .patch('/update/:projectname', auth, projectCont.update_C)
+    .patch('/update/:projectid', auth, projectCont.update_C)
 
     .patch('/update/participants/:projectname', auth, projectCont.updatePars_C)
+
+    .patch('/update/features/:projectname', auth, projectCont.updateFeatures_C)

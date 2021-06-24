@@ -1,4 +1,4 @@
-import { model, Model, Schema } from "mongoose";
+import { model, Model, Schema, Types } from "mongoose";
 import { IProjects } from "../utils/interfaces/IProjects.interface";
 
 const projectSchema: Schema<IProjects> = new Schema<IProjects>({
@@ -20,6 +20,7 @@ const projectSchema: Schema<IProjects> = new Schema<IProjects>({
         }
     }],
     participants: [{
+        _id: Types.ObjectId,
         username: String,
         permissions: {
             type: String,
