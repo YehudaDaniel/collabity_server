@@ -1,7 +1,7 @@
 import request from 'supertest'
 import { app, server } from '../index'
 import { Project } from '../models/projects.models'
-import { projectOneId, setupDataBase, ThirdProjectOneId, userOne, userOneId, userTwo, userTwoId } from './fixtures/db'
+import { projectOneId, SecondProjectOneId, setupDataBase, ThirdProjectOneId, userOne, userOneId, userThree, userThreeId, userTwo, userTwoId } from './fixtures/db'
 
 //This function runs before each test case in this test suite
 beforeEach(setupDataBase)
@@ -43,7 +43,7 @@ test('Should create a new project with the same name but for another user', asyn
 
 //Sending a test request to /project/create with an existing project title expecting it to fail
 test('Should not create project, title already taken', async () => {
-    const response = await request(app)
+    await request(app)
         .post('/project/create')
         .set('Authorization', `Bearer ${userTwo.tokens[0].token}`)
         .send({
@@ -53,13 +53,13 @@ test('Should not create project, title already taken', async () => {
         .expect(400)
 })
 
-//Sending a test request to /project/create with bad data, expecting it to fail
+//Sending a test request to /project/create with bad data, expecting it to fail(missing content)
 test('Should not create a new project', async () => {
     await request(app)
         .post('/project/create')
         .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
         .send({
-            title: "Should fail"
+            title: 'Should fail'
         })
         .expect(400)
 })
@@ -172,7 +172,7 @@ test('Should update only one project data', async () => {
     expect(project.content).toBe("Easy money")
 })
 
-//Sending a test request to /project/update/:projectname with false projectname expecting it to fail
+//Sending a test request to /project/update/:projectid with false projectid expecting it to fail
 test('Should not find a nonexisting project', async () => {
     await request(app)
         .patch(`/project/update/60d314110363503e04282976`)
@@ -186,7 +186,7 @@ test('Should not find a nonexisting project', async () => {
         .expect(404)
 })
 
-//Sending a test request to /project/update/:projectname with unallowed key values expecting it to fail
+//Sending a test request to /project/update/:projectid with unallowed key values expecting it to fail
 test('Should not update unallowed keys', async () => {
     await request(app)
         .patch(`/project/update/${projectOneId}`)
@@ -220,16 +220,16 @@ test('Should not update unallowed keys', async () => {
 
 //Sending a test request to __________ to update a project of another user using permissions
 
-//Sending a test request to /project/update/participants/:projectname to update participants add/delete
+//Sending a test request to /project/update/participants/:projectid to update participants add/delete
 test('Should update participants array list', async () => {
     const response = await request(app)
-        .patch('/project/update/participants/First_project')
+        .patch(`/project/update/participants/${SecondProjectOneId}`)
         .set('Authorization', `Bearer ${userTwo.tokens[0].token}`)
         .send({
             update: {
                 participants: [{
                     _id: userOneId,
-                    username: "test"
+                    username: userOne.username
                 }]
             }
         })
@@ -241,7 +241,27 @@ test('Should update participants array list', async () => {
 
 })
 
-//Sending a test request to /project/update/participants/:projectname with false data expecting it to fail
+//TODO: when updating dont rewrite the whole list but update only the specific changes
+//Sending a test request to /project/update/participants/:projectid as a participants with clearance, updating the participants list
+test('Should update the participants list as a participant with clearance', async () => {
+    const response = await request(app)
+        .patch(`/project/update/participants/${ThirdProjectOneId}`)
+        .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+        .send({
+            update: {
+                participants: [{
+                    _id: userTwoId,
+                    username: userTwo.username
+                },{
+                    username: userOne.username,
+                    _id: userOneId,
+                }]
+            }
+        })
+        .expect(200)
+})
+
+//Sending a test request to /project/update/participants/:projectid with false data expecting it to fail
 test('Should not update participants array list', async () => {
     await request(app)
         .patch('/project/update/participants/First_project')

@@ -18,6 +18,6 @@ projectRouter
     //PATCH Requests
     .patch('/update/:projectid', auth, projectCont.update_C)
 
-    .patch('/update/participants/:projectname', auth, projectCont.updatePars_C)
+    .patch('/update/participants/:projectid', auth, projectCont.updatePars_C)
 
-    .patch('/update/features/:projectname', auth, projectCont.updateFeatures_C)
+    // .patch('/update/features/:projectname', auth, projectCont.updateFeatures_C)

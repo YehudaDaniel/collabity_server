@@ -94,7 +94,7 @@ export module projectCont {
             const project = await Project.findOne({ _id: projectid })
 
             if(!project)
-                return res.status(ResponseStatus.NotFound).json({ error: 'Could not find the project'})
+                return res.status(ResponseStatus.NotFound).json({ error: 'Could not find project'})
 
 
             const isParticipantHasClearance = project?.participants?.some((participant) => {
@@ -120,7 +120,6 @@ export module projectCont {
     }
 
     //Function for updating the participants array list of a project
-    //TODO: make sure the person updating the list has clearance for this operation
     export async function updatePars_C(req: Request, res: Response) {
         const bodyData: string[] = Object.keys(req.body.update)
         const allowedChanges: string[] = ['participants']
@@ -130,19 +129,48 @@ export module projectCont {
             return res.status(ResponseStatus.BadRequest).json({ error: 'Invalid updates' })
 
         try {
-            const title: string = req.params.projectname.replace('_', ' ')
-            const project = await Project.updateOne({ title, owner: req.body.user._id }, {$set: {participants: req.body.update.participants} })
+            const projectid: string = req.params.projectid
 
-            //"n" containing the amount of matched documents found, hence 0
-            if(!project.n)
-                return res.status(ResponseStatus.NotFound).json({ error: "Could not find the specified project" })
+            //Finding the project by its id
+            const project = await Project.findOne({ _id: projectid })
 
-            const updatedProject = await Project.findOne({ title , owner: req.body.user._id })
+            if(!project)
+                return res.status(ResponseStatus.NotFound).json({ error: 'Could not find project' })
+            
 
-            if(!updatedProject)
-                return res.status(ResponseStatus.NotFound).json({ error: 'Could not find the updated project'})
+            const isParticipantHasClearance = project?.participants?.some((participant) => {
+                return participant._id.toString() == req.body.user._id.toString() && participant.permissions == "Manager"
+            })
 
-            res.send(updatedProject)
+            //Is the user who is making the changes either an owner or has a manager role as a participant
+            if(project?.owner.toString() == req.body.user._id.toString() || isParticipantHasClearance){
+                //Making sure no permissions changes were made
+                const updatesArray: Object[] = req.body.update.participants
+                const allowedKeys: string[] = ['username', '_id']
+
+                let areKeysValid: boolean = true
+                for(let i = 0; i < updatesArray.length; i++) {
+                    if(!Object.keys(updatesArray[i]).every((data: any) => allowedKeys.includes(data))) {
+                        areKeysValid = false
+                        break
+                    }
+                }
+
+                if(!areKeysValid)
+                    return res.status(ResponseStatus.BadRequest).json({ error: 'Invalid updates' })
+
+                const updateProject = await Project.updateOne({ _id: projectid }, {$set: {participants: req.body.update.participants} })
+
+                //"n" containing the amount of matched documents found, hence 0
+                if(!updateProject.n)
+                    return res.status(ResponseStatus.NotFound).json({ error: "Could not find the specified project" })
+
+
+                const updatedProject = await Project.findOne({ _id: projectid })
+                res.send(updatedProject)
+            }else{
+                res.status(ResponseStatus.BadRequest).send()
+            }
         }catch(e) {
             res.status(ResponseStatus.InternalError).send()
         }
